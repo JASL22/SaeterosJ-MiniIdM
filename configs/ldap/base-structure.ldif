@@ -1,0 +1,26 @@
+dn: ou=People,dc=fis,dc=epn,dc=ec
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Group,dc=fis,dc=epn,dc=ec
+objectClass: organizationalUnit
+ou: Group
+
+dn: uid=jperez,ou=People,dc=fis,dc=epn,dc=ec
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: jperez
+cn: Juan Perez
+sn: Perez
+uidNumber: 10001
+gidNumber: 10001
+homeDirectory: /home/jperez
+loginShell: /bin/bash
+mail: jperez@fis.epn.ec
+userPassword: {SSHA}temporal
+
+dn: cn=jperez,ou=Group,dc=fis,dc=epn,dc=ec
+objectClass: posixGroup
+cn: jperez
+gidNumber: 10001

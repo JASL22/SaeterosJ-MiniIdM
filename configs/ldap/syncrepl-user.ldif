@@ -1,0 +1,5 @@
+dn: cn=replicator,dc=fis,dc=epn,dc=ec
+objectClass: simpleSecurityObject
+objectClass: organizationalRole
+cn: replicator
+userPassword: {SSHA}replicaPass123

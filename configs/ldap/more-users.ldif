@@ -1,0 +1,27 @@
+dn: uid=malvan,ou=People,dc=fis,dc=epn,dc=ec
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: malvan
+cn: Maria Alvan
+sn: Alvan
+uidNumber: 10002
+gidNumber: 10001
+homeDirectory: /home/malvan
+loginShell: /bin/bash
+mail: malvan@fis.epn.ec
+userPassword: {SSHA}temporal
+
+dn: uid=dnoboa,ou=People,dc=fis,dc=epn,dc=ec
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: dnoboa
+cn: Diego Noboa
+sn: Noboa
+uidNumber: 10003
+gidNumber: 10001
+homeDirectory: /home/dnoboa
+loginShell: /bin/bash
+mail: dnoboa@fis.epn.ec
+userPassword: {SSHA}temporal
