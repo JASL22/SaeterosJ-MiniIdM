@@ -1,82 +1,83 @@
 # MiniIdM - Infraestructura de Identidad Segura para la FIS
 
+## Descripción general
+
+Este proyecto implementa una infraestructura de autenticación y directorio distribuida sobre Ubuntu Server, con integración de Kerberos, LDAP, PKI, HAProxy y Prometheus. El objetivo es ofrecer un entorno seguro y resiliente para la FIS, con soporte para SSO, certificados digitales y alta disponibilidad.
+
 ## Objetivo
 
 Diseñar, implementar y evaluar una infraestructura segura de autenticación y servicios de directorio para la FIS, integrando:
 
-- Autenticación Kerberos (SSO con tickets)
-- Infraestructura de Llave Pública (PKI)
-- Servicios de Directorio LDAP
-- Alta Disponibilidad (HA) en Linux
+- Autenticación Kerberos con SSO mediante tickets
+- Infraestructura de llave pública (PKI)
+- Servicios de directorio LDAP
+- Alta disponibilidad en Linux
+- Monitoreo con Prometheus
 
 ---
 
-## Arquitectura del Sistema
+## Arquitectura del sistema
 
-### Componentes y Distribución
+### Componentes y distribución
 
 | VM | IP | Rol |
 |---|---|---|
-| **ca** | 192.168.56.10 | Autoridad Certificadora (PKI) |
-| **ldap1** | 192.168.56.11 | Servidor LDAP Maestro |
-| **ldap2** | 192.168.56.12 | Servidor LDAP Réplica |
-| **kdc1** | 192.168.56.13 | KDC Primario (Kerberos) |
-| **kdc2** | 192.168.56.14 | KDC Secundario (Kerberos) |
-| **lb-web** | 192.168.56.15 | Balanceador HAProxy + Servicio Web |
-
+| ca | 192.168.56.10 | Autoridad certificadora (PKI) |
+| ldap1 | 192.168.56.11 | Servidor LDAP maestro |
+| ldap2 | 192.168.56.12 | Servidor LDAP réplica |
+| kdc1 | 192.168.56.13 | KDC primario (Kerberos) |
+| kdc2 | 192.168.56.14 | KDC secundario (Kerberos) |
+| lb-web | 192.168.56.15 | Balanceador HAProxy + servicio web |
 
 ---
 
-## Componentes Implementados
+## Componentes implementados
 
 ### 1. PKI (OpenSSL - ECDSA)
-- **CA Raíz**: Autoridad Certificadora para la FIS
-- **Certificados**: Emitidos para todos los servidores (LDAP, Kerberos, Web)
-- **Algoritmo**: ECDSA con curva `prime256v1`
-- **TLS**: LDAPS (puerto 636), HTTPS (puerto 443)
+- CA raíz para la FIS
+- Certificados emitidos para LDAP, Kerberos y web
+- Algoritmo ECDSA con curva prime256v1
+- TLS para LDAPS y HTTPS
 
 ### 2. LDAP (OpenLDAP)
-- **Estructura DIT**: `dc=fis,dc=epn,dc=ec`
-- **Usuarios**: jperez, malvan, dnoboa, jsaeteros
-- **Replicación**: Maestro (`ldap1`) → Réplica (`ldap2`) en tiempo real
+- Estructura DIT: dc=fis,dc=epn,dc=ec
+- Usuarios de prueba: jperez, malvan, dnoboa, jsaeteros
+- Replicación maestro-réplica en tiempo real
 
 ### 3. Kerberos (MIT)
-- **Realm**: `FIS.EPN.EC`
-- **KDC Primario**: `kdc1`
-- **KDC Secundario**: `kdc2`
-- **Principals**: Usuarios y servicios (LDAP, HTTP)
+- Realm: FIS.EPN.EC
+- KDC primario y secundario
+- Principals para usuarios y servicios LDAP/HTTP
 
-### 4. Alta Disponibilidad (HA)
-- **LDAP**: HAProxy balancea entre `ldap1` y `ldap2`
-- **Kerberos**: Failover automático KDC1 → KDC2 (~3.14 segundos)
-- **Monitoreo**: Prometheus
+### 4. Alta disponibilidad (HA)
+- LDAP con HAProxy entre ldap1 y ldap2
+- Failover automático para Kerberos
+- Monitoreo con Prometheus
 
-### 5. Servicio Web (Apache + SPNEGO)
-- **Autenticación**: Kerberos + SPNEGO
-- **TLS**: Certificados de la PKI
-- **Flujo**: Browser → Ticket Kerberos → Web Service
+### 5. Servicio web (Apache + SPNEGO)
+- Autenticación Kerberos + SPNEGO
+- Uso de certificados emitidos por la PKI
 
 ### 6. Monitoreo (Prometheus)
-- **Node Exporter**: En todas las VMs
-- **Métricas**: CPU, Memoria, Disco, Red
-- **Targets**: 6/6 UP
+- Node Exporter en todas las VMs
+- Métricas de CPU, memoria, disco y red
 
 ---
 
-## Pruebas de Alta Disponibilidad
+## Pruebas de alta disponibilidad
 
-| Experimento | Resultado | Tiempo de Recuperación |
+| Experimento | Resultado | Tiempo de recuperación |
 |---|---|---|
-| Crash de ldap1 (kill -9) | ✅ Failover a ldap2 | ~2-3s |
-| Partición de red (iptables) | ✅ Failover a ldap2 | ~2-3s |
+| Crash de ldap1 | ✅ Failover a ldap2 | ~2-3 s |
+| Partición de red | ✅ Failover a ldap2 | ~2-3 s |
 | Certificado expirado | ❌ Conexión rechazada | N/A |
-| Fallo de KDC1 | ✅ Failover a KDC2 | ~3.14s |
+| Fallo de KDC1 | ✅ Failover a KDC2 | ~3.14 s |
 
-**Tasa de autenticaciones exitosas:** 100%
+Tasa de autenticaciones exitosas: 100%
 
 ---
 
-## Tecnologías Utilizadas
+## Tecnologías utilizadas
 
 | Componente | Tecnología | Versión |
 |---|---|---|
@@ -84,33 +85,64 @@ Diseñar, implementar y evaluar una infraestructura segura de autenticación y s
 | Kerberos | MIT Kerberos | 1.22.1 |
 | PKI | OpenSSL | 3.x |
 | Balanceo | HAProxy | 3.2.9 |
-| Servicio Web | Apache + mod_auth_gssapi | 2.4 |
+| Servicio web | Apache + mod_auth_gssapi | 2.4 |
 | Monitoreo | Prometheus | 2.53.5 |
 | SO | Ubuntu Server | 26.04 LTS |
 
 ---
 
-
-## Requisitos Previos
+## Requisitos previos
 
 - VirtualBox con 6 VMs Ubuntu Server 26.04 LTS
-- Red Interna: 192.168.56.0/24
+- Red interna: 192.168.56.0/24
 - SSH habilitado en todas las VMs
+- Usuario de acceso configurado como vboxuser
 
 ---
 
-## Instalación Rápida
+## Inicio rápido
 
 ```bash
-# Clonar el repositorio
 git clone https://github.com/JASL22/SaeterosJ-MiniIdM.git
 cd SaeterosJ-MiniIdM
-
-# Ejecutar Makefile
+make help
 make all
+```
+
+> Nota: el despliegue asume que las VMs están encendidas, accesibles por SSH y que los archivos de configuración están presentes en la carpeta configs.
 
 ---
 
-## Prometheus Targets:
-http://192.168.56.10:9090/classic/targets
-![alt text](image.png)
+## Uso del Makefile
+
+Los targets disponibles son:
+
+- make help: muestra la ayuda del proyecto
+- make install-ldap: instala y configura OpenLDAP
+- make install-kerberos: instala y configura Kerberos
+- make install-haproxy: instala y configura HAProxy
+- make install-sssd: instala y configura SSSD
+- make install-prometheus: instala y configura Prometheus
+- make test-failover: ejecuta una prueba básica de resiliencia
+- make clean: limpia archivos temporales
+
+---
+
+## Monitoreo
+
+- Interfaz de Prometheus: http://192.168.56.10:9090
+- Targets: http://192.168.56.10:9090/classic/targets
+
+![Vista de Prometheus](image.png)
+
+---
+
+## Estructura del repositorio
+
+- configs/ldap/: archivos de configuración de OpenLDAP
+- configs/kerberos/: configuración de Kerberos
+- configs/haproxy/: configuración de HAProxy
+- configs/sssd/: configuración de SSSD
+- configs/prometheus/: configuración de Prometheus
+- docs/capturas/: capturas del proyecto
+

@@ -1,11 +1,11 @@
-
----
-
-## 📄 Makefile
-
-```makefile
-# MiniIdM - Makefile
+﻿# MiniIdM - Makefile
 # Infraestructura de Identidad Segura para la FIS
+
+SSH_USER ?= vboxuser
+LDAP_HOST ?= 192.168.56.11
+KERBEROS_HOST ?= 192.168.56.13
+HAPROXY_HOST ?= 192.168.56.15
+PROMETHEUS_HOST ?= 192.168.56.10
 
 .PHONY: help install-ldap install-kerberos install-haproxy install-sssd install-prometheus test-failover all clean
 
@@ -13,58 +13,59 @@ help:
 	@echo "MiniIdM - Makefile"
 	@echo ""
 	@echo "Targets disponibles:"
+	@echo "  make help                - Mostrar esta ayuda"
 	@echo "  make install-ldap        - Instalar y configurar OpenLDAP"
 	@echo "  make install-kerberos    - Instalar y configurar Kerberos"
 	@echo "  make install-haproxy     - Instalar y configurar HAProxy"
 	@echo "  make install-sssd        - Instalar y configurar SSSD"
 	@echo "  make install-prometheus  - Instalar y configurar Prometheus"
-	@echo "  make test-failover       - Ejecutar pruebas de failover"
+	@echo "  make test-failover       - Ejecutar una prueba básica de resiliencia"
 	@echo "  make all                 - Ejecutar todas las instalaciones"
 	@echo "  make clean               - Limpiar archivos temporales"
 
 install-ldap:
 	@echo "=== Instalando OpenLDAP ==="
-	@ssh vboxuser@192.168.56.11 "sudo apt update && sudo apt install -y slapd ldap-utils"
-	@scp configs/ldap/slapd.conf vboxuser@192.168.56.11:/tmp/
-	@ssh vboxuser@192.168.56.11 "sudo cp /tmp/slapd.conf /etc/ldap/"
+	@ssh $(SSH_USER)@$(LDAP_HOST) "sudo apt update && sudo apt install -y slapd ldap-utils"
+	@scp configs/ldap/slapd-config.ldif $(SSH_USER)@$(LDAP_HOST):/tmp/
+	@ssh $(SSH_USER)@$(LDAP_HOST) "sudo cp /tmp/slapd-config.ldif /etc/ldap/"
 
 install-kerberos:
 	@echo "=== Instalando Kerberos ==="
-	@ssh vboxuser@192.168.56.13 "sudo apt update && sudo apt install -y krb5-kdc krb5-admin-server"
-	@scp configs/kerberos/krb5.conf vboxuser@192.168.56.13:/tmp/
-	@ssh vboxuser@192.168.56.13 "sudo cp /tmp/krb5.conf /etc/"
+	@ssh $(SSH_USER)@$(KERBEROS_HOST) "sudo apt update && sudo apt install -y krb5-kdc krb5-admin-server"
+	@scp configs/kerberos/krb5.conf $(SSH_USER)@$(KERBEROS_HOST):/tmp/
+	@ssh $(SSH_USER)@$(KERBEROS_HOST) "sudo cp /tmp/krb5.conf /etc/"
 
 install-haproxy:
 	@echo "=== Instalando HAProxy ==="
-	@ssh vboxuser@192.168.56.15 "sudo apt update && sudo apt install -y haproxy"
-	@scp configs/haproxy/haproxy.cfg vboxuser@192.168.56.15:/tmp/
-	@ssh vboxuser@192.168.56.15 "sudo cp /tmp/haproxy.cfg /etc/haproxy/ && sudo systemctl restart haproxy"
+	@ssh $(SSH_USER)@$(HAPROXY_HOST) "sudo apt update && sudo apt install -y haproxy"
+	@scp configs/haproxy/haproxy.cfg $(SSH_USER)@$(HAPROXY_HOST):/tmp/
+	@ssh $(SSH_USER)@$(HAPROXY_HOST) "sudo cp /tmp/haproxy.cfg /etc/haproxy/ && sudo systemctl restart haproxy"
 
 install-sssd:
 	@echo "=== Instalando SSSD ==="
-	@ssh vboxuser@192.168.56.15 "sudo apt update && sudo apt install -y sssd sssd-ldap sssd-krb5"
-	@scp configs/sssd/sssd.conf vboxuser@192.168.56.15:/tmp/
-	@ssh vboxuser@192.168.56.15 "sudo cp /tmp/sssd.conf /etc/sssd/ && sudo chmod 600 /etc/sssd/sssd.conf"
+	@ssh $(SSH_USER)@$(HAPROXY_HOST) "sudo apt update && sudo apt install -y sssd sssd-ldap sssd-krb5"
+	@scp configs/sssd/sssd.conf $(SSH_USER)@$(HAPROXY_HOST):/tmp/
+	@ssh $(SSH_USER)@$(HAPROXY_HOST) "sudo cp /tmp/sssd.conf /etc/sssd/ && sudo chmod 600 /etc/sssd/sssd.conf"
 
 install-prometheus:
 	@echo "=== Instalando Prometheus ==="
-	@ssh vboxuser@192.168.56.10 "sudo apt update && sudo apt install -y prometheus prometheus-node-exporter"
-	@scp configs/prometheus/prometheus.yml vboxuser@192.168.56.10:/tmp/
-	@ssh vboxuser@192.168.56.10 "sudo cp /tmp/prometheus.yml /etc/prometheus/ && sudo systemctl restart prometheus"
+	@ssh $(SSH_USER)@$(PROMETHEUS_HOST) "sudo apt update && sudo apt install -y prometheus prometheus-node-exporter"
+	@scp configs/prometheus/prometheus.yml $(SSH_USER)@$(PROMETHEUS_HOST):/tmp/
+	@ssh $(SSH_USER)@$(PROMETHEUS_HOST) "sudo cp /tmp/prometheus.yml /etc/prometheus/ && sudo systemctl restart prometheus"
 
 test-failover:
-	@echo "=== Probando Failover ==="
-	@echo "1. Crash de ldap1 (kill -9)"
-	@ssh vboxuser@192.168.56.11 "sudo kill -9 $$(sudo pgrep slapd) && sudo systemctl start slapd"
-	@echo "2. Prueba de KDC fallback"
-	@ssh vboxuser@192.168.56.13 "sudo systemctl stop krb5-kdc && sudo systemctl start krb5-kdc"
-	@echo "✅ Pruebas completadas"
+	@echo "=== Probando failover ==="
+	@echo "1. Reinicio de slapd"
+	@ssh $(SSH_USER)@$(LDAP_HOST) "sudo pkill slapd || true; sudo systemctl start slapd"
+	@echo "2. Reinicio de krb5-kdc"
+	@ssh $(SSH_USER)@$(KERBEROS_HOST) "sudo systemctl stop krb5-kdc || true; sudo systemctl start krb5-kdc"
+	@echo "Pruebas completadas"
 
 all: install-ldap install-kerberos install-haproxy install-sssd install-prometheus
-	@echo "✅ Todas las instalaciones completadas"
+	@echo "Todas las instalaciones completadas"
 
 clean:
 	@echo "=== Limpiando archivos temporales ==="
 	@find . -name "*.tmp" -delete
 	@find . -name "*.bak" -delete
-	@echo "✅ Limpieza completada"
+	@echo "Limpieza completada"
