@@ -90,22 +90,6 @@ Diseñar, implementar y evaluar una infraestructura segura de autenticación y s
 
 ---
 
-## Estructura del Repositorio
-📁 miniidm-fis/
-├── 📄 README.md # Este archivo
-├── 📄 Makefile # Automatización
-├── 📁 configs/ # Archivos de configuración
-│ ├── ldap/ # OpenLDAP
-│ ├── kerberos/ # MIT Kerberos
-│ ├── haproxy/ # HAProxy
-│ ├── sssd/ # SSSD
-│ └── prometheus/ # Prometheus
-├── 📁 scripts/ # Scripts de instalación
-├── 📁 docs/ # Documentación
-│ └── 📁 capturas/ # Capturas de pantalla
-└── 📁 pki/ # Certificados
-
----
 
 ## Requisitos Previos
 
@@ -119,7 +103,7 @@ Diseñar, implementar y evaluar una infraestructura segura de autenticación y s
 
 ```bash
 # Clonar el repositorio
-git https://github.com/JASL22/SaeterosJ-MiniIdM.git
+git clone https://github.com/JASL22/SaeterosJ-MiniIdM.git
 cd SaeterosJ-MiniIdM
 
 # Ejecutar Makefile
