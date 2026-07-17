@@ -108,3 +108,9 @@ cd SaeterosJ-MiniIdM
 
 # Ejecutar Makefile
 make all
+
+---
+
+## Prometheus Targets:
+http://192.168.56.10:9090/classic/targets
+![alt text](image.png)
