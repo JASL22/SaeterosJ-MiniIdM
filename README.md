@@ -144,5 +144,41 @@ Los targets disponibles son:
 - configs/haproxy/: configuración de HAProxy
 - configs/sssd/: configuración de SSSD
 - configs/prometheus/: configuración de Prometheus
-- docs/capturas/: capturas del proyecto
 
+---
+
+## Evidencias del proyecto
+
+A continuación se presentan enlaces rápidos a las evidencias más relevantes del proyecto. Al hacer clic, podrás abrir la información o imagen relacionada.
+
+### 1. Arquitectura del sistema
+- [Vista general del proyecto](image.png)
+
+### 2. PKI
+- [Configuración de certificados y PKI](configs/kerberos/krb5.conf)
+- [Documentación de evidencias](docs/evidencias.md)
+
+### 3. LDAP
+- [Configuración LDAP](configs/ldap/slapd-config.ldif)
+- [Estructura de usuarios y directorio](configs/ldap/base-structure.ldif)
+
+### 4. Kerberos
+- [Configuración de Kerberos](configs/kerberos/krb5.conf)
+
+### 5. HAProxy (balanceo de carga)
+- [Configuración de HAProxy](configs/haproxy/haproxy.cfg)
+
+### 6. Servicio web (Apache + SPNEGO)
+- [Archivo de referencia del proyecto](README.md)
+
+### 7. Monitoreo (Prometheus)
+- [Configuración de Prometheus](configs/prometheus/prometheus.yml)
+- [Vista de targets](http://192.168.56.10:9090/classic/targets)
+
+> Para una vista resumida de las evidencias, revisa [docs/evidencias.md](docs/evidencias.md). Además, en la carpeta [docs](docs) se encuentran las capturas de monitoreo y rendimiento del proyecto.
+
+---
+
+## Autor
+
+**Jhonn Alexander Saeteros Laime**  
